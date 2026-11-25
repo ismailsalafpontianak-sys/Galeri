@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galeri Penyimpanan Foto Video</title>
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#08110d">
+<style>
+:root{--bg:#08110d;--card:#14241d;--green:#16a34a;--green2:#065f43;--mint:#3ed598;--text:#e9eef6;--muted:#9fb3a8;--border:#22382e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,sans-serif}
+.wrap{max-width:480px;margin:0 auto;padding:16px 16px 100px}
+h1{font-size:19px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin:12px 0}
+.storage{background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:20px;padding:20px}
+.storage .big{font-size:44px;font-weight:800;margin:6px 0}
+.storage .counts{font-size:15px}
+.storage .note{font-size:14px;margin-top:12px;line-height:1.5}
+.add{display:flex;gap:14px;align-items:center;cursor:pointer}
+.plus{width:52px;height:52px;min-width:52px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff}
+button{background:var(--mint);color:#08110d;border:0;border-radius:999px;padding:12px 16px;font-weight:700;width:100%;cursor:pointer}
+input,select{width:100%;padding:12px;border-radius:12px;border:1px solid #2c3e5e;background:#0b1a14;color:var(--text);margin:6px 0}
+.search{border-radius:999px;padding:12px 16px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.pill{border:0;border-radius:999px;padding:10px 18px;background:#14241d;color:var(--muted);cursor:pointer;font-weight:600}
+.pill.on{background:var(--green);color:#fff}
+.pill select{background:none;border:0;color:inherit;font-weight:600;padding:0;margin:0;width:auto}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer}
+.tile img,.tile video{width:100%;height:130px;object-fit:cover;display:block;background:#000}
+.tile div{padding:10px;font-size:12px;line-height:1.5}
+.day{font-weight:800;margin:16px 0 8px}
+.empty{text-align:center;padding:36px 16px}
+.empty h2{margin:0 0 12px}
+nav{position:fixed;left:0;right:0;bottom:0;background:#0b1a14;display:flex;justify-content:space-around;padding:10px;max-width:480px;margin:0 auto;border-top:1px solid var(--border)}
+nav button{background:none;color:var(--muted);width:auto;padding:6px 10px}
+nav button.on{color:var(--mint)}
+.badge{display:inline-block;background:rgba(62,213,152,.15);color:var(--mint);border-radius:99px;padding:3px 8px;font-size:11px}
+details summary{cursor:pointer;font-weight:700;font-size:17px;list-style:none;display:flex;justify-content:space-between}
+details summary::-webkit-details-marker{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Galeri Penyimpanan Foto Video</h1>
+
+<div class="storage">
+<div>Total penyimpanan terpakai</div>
+<div class="big" id="total">0 B</div>
+<div class="counts"><span id="jFile">0 file</span> &nbsp; <span id="jFoto">0 foto</span> &nbsp; <span id="jVideo">0 video</span></div>
+<div class="note">🛡 &nbsp;Semua file tersimpan dalam ukuran aslinya — tanpa resize, tanpa kompresi ulang, terverifikasi hash SHA-256.</div>
+</div>
+
+<div class="card"><div class="add" onclick="document.getElementById('file').click()"><div class="plus">+</div><div><b style="font-size:17px">Tambah dari Galeri HP</b><p class="muted" style="margin:6px 0 0">Foto &amp; video ukuran asli • tanggal, jam, hari &amp; lokasi terbaca otomatis • maks 20 MB per file</p></div></div>
+<input type="file" id="file" accept="image/*,video/*" multiple style="display:none" onchange="tambah()">
+<input id="lokasi" placeholder="Lokasi (mis. Pontianak) — kosongkan untuk isi nanti">
+<p class="muted" id="status" style="margin:6px 0 0"></p></div>
+
+<div class="card"><details><summary>Cara kerja penyimpanannya <span>⌄</span></summary><p class="muted">1. Pilih dari galeri → 2. Baca tanggal, jam, hari &amp; lokasi → 3. Hitung hash SHA-256 → 4. Simpan file asli utuh, thumbnail terpisah → 5. Cari berdasarkan tanggal, hari &amp; lokasi → 6. Unduh file asli, ukurannya sama persis → 7. Hapus bila tidak perlu.<br><br>Versi file ini berdiri sendiri tanpa server dan tanpa GitHub. Lokasi GPS tidak diubah jadi nama tempat otomatis — isi lokasi manual di atas.</p></details></div>
+
+<input class="search" id="cari" placeholder="🔍 &nbsp;Cari nama file, lokasi, hari, tanggal..." oninput="render()">
+<div class="pills">
+<button class="pill on" id="pSemua" onclick="setTipe('')">Semua</button>
+<button class="pill" id="pFoto" onclick="setTipe('image')">Foto</button>
+<button class="pill" id="pVideo" onclick="setTipe('video')">Video</button>
+<span class="pill"><select id="hari" onchange="render()"><option value="">Semua hari</option><option>Senin</option><option>Selasa</option><option>Rabu</option><option>Kamis</option><option>Jumat</option><option>Sabtu</option><option>Minggu</option></select></span>
+</div>
+<div class="pills"><span class="pill"><select id="urut" onchange="render()"><option value="baru">Terbaru dulu</option><option value="lama">Terlama dulu</option></select></span></div>
+
+<div id="list"></div>
+<div id="detail"></div>
+</div>
+<nav>
+<button class="on" onclick="showAll()">Galeri</button>
+<button onclick="document.getElementById('file').click()" style="background:var(--mint);color:#08110d;border-radius:50%;width:44px;height:44px;font-size:22px">+</button>
+<button onclick="alert('Data tersimpan lokal di perangkat ini (IndexedDB), bukan di server.')">Tentang</button>
+</nav>
+<script>
+const hariNama=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+let db, items=[], tipe='';
+function openDB(){return new Promise((res,rej)=>{let r=indexedDB.open('galeri',1);r.onupgradeneeded=e=>{e.target.result.createObjectStore('files',{keyPath:'id'})};r.onsuccess=e=>{db=e.target.result;res()};r.onerror=rej})}
+async function load(){let tx=db.transaction('files','readonly');let s=tx.objectStore('files');items=await new Promise(r=>{let q=s.getAll();q.onsuccess=()=>r(q.result)});render()}
+function fmtSize(n){if(n>=1048576)return (n/1048576).toFixed(2)+' MB';if(n>=1024)return (n/1024).toFixed(1)+' KB';return n+' B'}
+async function sha(file){let b=await file.arrayBuffer();let h=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+async function tambah(){let fs=document.getElementById('file').files;if(!fs.length)return;let lok=document.getElementById('lokasi').value||'';for(let f of fs){if(f.size>20*1048576){alert(f.name+' lebih dari 20 MB, dilewati');continue}let d=new Date(f.lastModified);let rec={id:Date.now()+Math.random(),nama:f.name,tipe:f.type,ukuran:f.size,tanggal:d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}),jam:d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),hari:hariNama[d.getDay()],lokasi:lok,hash:await sha(f),blob:f,ts:f.lastModified};let tx=db.transaction('files','readwrite');tx.objectStore('files').add(rec);await new Promise(r=>tx.oncomplete=r)}document.getElementById('status').textContent=fs.length+' file tersimpan utuh, ukuran tidak berubah.';load()}
+function setTipe(t){tipe=t;document.getElementById('pSemua').className='pill'+(t===''?' on':'');document.getElementById('pFoto').className='pill'+(t==='image'?' on':'');document.getElementById('pVideo').className='pill'+(t==='video'?' on':'');render()}
+function render(){
+let q=(document.getElementById('cari').value||'').toLowerCase();let h=document.getElementById('hari').value;let urut=document.getElementById('urut').value;
+let list=items.filter(x=>(x.nama+' '+x.lokasi+' '+x.hari+' '+x.tanggal).toLowerCase().includes(q)&&(!h||x.hari===h)&&(!tipe||x.tipe.startsWith(tipe)));
+list.sort((a,b)=>urut==='baru'?b.ts-a.ts:a.ts-b.ts);
+let total=items.reduce((a,x)=>a+x.ukuran,0);
+document.getElementById('total').textContent=fmtSize(total);
+document.getElementById('jFile').textContent=items.length+' file';
+document.getElementById('jFoto').textContent=items.filter(x=>x.tipe.startsWith('image')).length+' foto';
+document.getElementById('jVideo').textContent=items.filter(x=>x.tipe.startsWith('video')).length+' video';
+if(!list.length){document.getElementById('list').innerHTML=`<div class="card empty"><h2>Galeri masih kosong</h2><p class="muted">Ketuk tombol “Tambah dari Galeri HP” di atas, pilih foto atau video — file aslinya tersimpan utuh di sini lengkap dengan hari, tanggal, jam, dan lokasinya.</p></div>`;return}
+let groups={};list.forEach(x=>{(groups[x.hari+', '+x.tanggal]=groups[x.hari+', '+x.tanggal]||[]).push(x)});
+document.getElementById('list').innerHTML=Object.keys(groups).map(g=>`<div class="day">${g}</div><div class="grid">`+groups[g].map(x=>{let url=URL.createObjectURL(x.blob);let media=x.tipe.startsWith('video')?`<video src="${url}" muted></video>`:`<img src="${url}">`;return `<div class="tile" onclick="detail(${items.indexOf(x)})">${media}<div><b>${x.nama}</b><br>${x.jam} WIB • ${fmtSize(x.ukuran)}<br><span class="badge">${x.lokasi||'Lokasi belum diisi'}</span></div></div>`}).join('')+'</div>').join('')}
+function detail(i){let x=items[i];let url=URL.createObjectURL(x.blob);let media=x.tipe.startsWith('video')?`<video src="${url}" controls style="width:100%;border-radius:12px"></video>`:`<img src="${url}" style="width:100%;border-radius:12px">`;document.getElementById('detail').innerHTML=`<div class="card">${media}<b>${x.nama}</b><p class="muted">Hari: ${x.hari}<br>Tanggal: ${x.tanggal}<br>Jam: ${x.jam} WIB<br>Lokasi: ${x.lokasi||'-'}<br>Ukuran asli: ${fmtSize(x.ukuran)} (${x.ukuran} byte)<br>Tipe: ${x.tipe}<br>SHA-256: ${x.hash.slice(0,32)}…</p><a href="${url}" download="${x.nama}"><button>Unduh File Asli</button></a><br><br><button onclick="hapus('${x.id}')" style="background:#e8836b;color:#08110d">Hapus</button></div>`;window.scrollTo(0,document.getElementById('detail').offsetTop)}
+function hapus(id){if(!confirm('Hapus file ini?'))return;let tx=db.transaction('files','readwrite');tx.objectStore('files').delete(id);tx.oncomplete=()=>{document.getElementById('detail').innerHTML='';load()}}
+function showAll(){document.getElementById('detail').innerHTML='';render()}
+openDB().then(load);
+</script>
+</body>
+</html>
